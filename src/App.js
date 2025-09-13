@@ -7,7 +7,7 @@ function App() {
   const [comments, setComments] = useState([]);
   const selectedClient = clients[selectedClientIndex];
 
-  // Webhook URL from secure Netlify environment variable
+  // Webhook URL from secure Netlify environment
   const WEBHOOK_URL = process.env.REACT_APP_WEBHOOK_URL;
 
   // Load client list from Netlify Function

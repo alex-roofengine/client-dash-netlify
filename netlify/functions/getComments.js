@@ -1,30 +1,37 @@
-// netlify/functions/getComments.js
-const fetch = require('node-fetch'); // Netlify supports node-fetch
+import fetch from 'node-fetch';
 
-exports.handler = async function(event, context) {
-  const notionToken = process.env.NOTION_TOKEN; // set as env variable in Netlify
-  const { pageId } = event.queryStringParameters;
-  if (!pageId) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Missing pageId" }) };
-  }
-
+export const handler = async (event) => {
   try {
-    const res = await fetch(
-      `https://api.notion.com/v1/comments?block_id=${pageId}`,
-      {
-        method: 'GET',
-        headers: {
-          "Authorization": `Bearer ${notionToken}`,
-          "Notion-Version": "2025-09-03"
-        }
+    // Extract query parameters if needed, e.g. pageId
+    const { pageId } = event.queryStringParameters;
+
+    // Example request to Notion API or any other API
+    const notionApiUrl = `https://api.notion.com/v1/pages/${pageId}/comments`;
+    const response = await fetch(notionApiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
+        'Notion-Version': '2025-09-03',
+        'Content-Type': 'application/json'
       }
-    );
-    const data = await res.json();
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Respond with the fetched comments (array or object)
     return {
       statusCode: 200,
-      body: JSON.stringify(data.results || [])
+      body: JSON.stringify(data)
     };
-  } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch comments" }) };
+  } catch (error) {
+    // Handle errors gracefully
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
+    };
   }
 };

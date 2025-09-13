@@ -1,29 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import clients from './clients.json';
-
-const WEBHOOK_URL = "https://hook.us1.make.com/ofilq3okaam4aekqh6sbhfecdupzcq75"; // Replace this with your actual webhook URL
 
 function App() {
+  const [clients, setClients] = useState([]);
   const [selectedClientIndex, setSelectedClientIndex] = useState(0);
   const [notes, setNotes] = useState('');
   const [comments, setComments] = useState([]);
   const selectedClient = clients[selectedClientIndex];
 
+  // Use environment variables set in Netlify or a local .env file
+  const WEBHOOK_URL = process.env.REACT_APP_WEBHOOK_URL;
+  const NOTION_TOKEN = process.env.REACT_APP_NOTION_TOKEN;
+
+  // Load clients from Netlify Function
+  useEffect(() => {
+    fetch('/.netlify/functions/getClients')
+      .then(res => res.json())
+      .then(data => setClients(data))
+      .catch(() => setClients([]));
+  }, []);
+
   // Fetch Notion comments for the selected client
   useEffect(() => {
     async function fetchComments() {
-      if (!selectedClient.notionPageId) {
+      if (!selectedClient || !selectedClient.notionPageId) {
         setComments([]);
         return;
       }
       try {
-        // Replace YOUR_NOTION_INTEGRATION_TOKEN with your actual token
-        const res = await fetch(`https://api.notion.com/v1/comments?block_id=${selectedClient.notionPageId}`, {
-          headers: {
-            "Authorization": "Bearer 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", // Must be securely handled via Netlify Functions or backend for production!
-            "Notion-Version": "2025‑09‑03"
+        const res = await fetch(
+          `https://api.notion.com/v1/comments?block_id=${selectedClient.notionPageId}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${NOTION_TOKEN}`, // Securely handled by Netlify env variable!
+              "Notion-Version": "2025‑09‑03"
+            }
           }
-        });
+        );
         const data = await res.json();
         setComments(data.results || []);
       } catch (error) {
@@ -31,15 +43,12 @@ function App() {
       }
     }
     fetchComments();
-  }, [selectedClientIndex]);
+  }, [selectedClientIndex, selectedClient, NOTION_TOKEN]);
 
   // Submit form to webhook
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      client: selectedClient,
-      notes
-    };
+    const payload = { client: selectedClient, notes };
     try {
       await fetch(WEBHOOK_URL, {
         method: 'POST',

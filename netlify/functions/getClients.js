@@ -1,10 +1,15 @@
 // netlify/functions/getClients.js
 
 exports.handler = async function(event, context) {
-  // Store your private client data here (hardcoded, or load from environment variables)
   const clients = [
-    { name: "Client A", notionPageId: "abc123", ghlLocationId: "def456" },
-    { name: "Client B", notionPageId: "xyz789", ghlLocationId: "uvw567" }
+    {
+      "name": "United Contracting & Roofing",
+      "notionPageId": "82594b6db4244babaff0004102717f29",
+      "ghlLocationId": "Pz0AyuL7ZZd3lpLwgHeo",
+      "slackID": "C03TZ5NJZPF",
+      "ghlAPIKey": "pit-fda69e70-abec-4047-a56e-6d92d1bf9ab5",
+      "stripeCustomerID": "cus_MJlDkoKaj5PSj8"
+    }
   ];
 
   return {

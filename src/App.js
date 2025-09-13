@@ -7,11 +7,10 @@ function App() {
   const [comments, setComments] = useState([]);
   const selectedClient = clients[selectedClientIndex];
 
-  // Use environment variables set in Netlify or a local .env file
+  // Webhook URL from secure Netlify environment variable
   const WEBHOOK_URL = process.env.REACT_APP_WEBHOOK_URL;
-  const NOTION_TOKEN = process.env.REACT_APP_NOTION_TOKEN;
 
-  // Load clients from Netlify Function
+  // Load client list from Netlify Function
   useEffect(() => {
     fetch('/.netlify/functions/getClients')
       .then(res => res.json())
@@ -19,7 +18,7 @@ function App() {
       .catch(() => setClients([]));
   }, []);
 
-  // Fetch Notion comments for the selected client
+  // Fetch Notion comments from secure Netlify Function
   useEffect(() => {
     async function fetchComments() {
       if (!selectedClient || !selectedClient.notionPageId) {
@@ -28,22 +27,16 @@ function App() {
       }
       try {
         const res = await fetch(
-          `https://api.notion.com/v1/comments?block_id=${selectedClient.notionPageId}`,
-          {
-            headers: {
-              "Authorization": `Bearer ${NOTION_TOKEN}`, // Securely handled by Netlify env variable!
-              "Notion-Version": "2025‑09‑03"
-            }
-          }
+          `/.netlify/functions/getComments?pageId=${selectedClient.notionPageId}`
         );
         const data = await res.json();
-        setComments(data.results || []);
+        setComments(data);
       } catch (error) {
         setComments([]);
       }
     }
     fetchComments();
-  }, [selectedClientIndex, selectedClient, NOTION_TOKEN]);
+  }, [selectedClientIndex, selectedClient]);
 
   // Submit form to webhook
   const handleSubmit = async (e) => {
@@ -111,9 +104,12 @@ function App() {
           <ul style={{ paddingLeft: 0 }}>
             {comments.map((comment) => (
               <li key={comment.id} style={{ marginBottom: 18, listStyle: 'none', background: '#f7f7fa', padding: '16px', borderRadius: '6px' }}>
-                {comment.rich_text?.map((r, i) => r.plain_text).join(' ') || 'No text'}
+                {/* Notion comments: display all plain text parts */}
+                {comment.rich_text?.map((r) => r.plain_text).join(' ') || 'No text'}
                 <div style={{ fontSize: '0.85em', color: '#888', marginTop: '8px' }}>
-                  {new Date(comment.created_time).toLocaleString()}
+                  {comment.created_time
+                    ? new Date(comment.created_time).toLocaleString()
+                    : ''}
                 </div>
               </li>
             ))}

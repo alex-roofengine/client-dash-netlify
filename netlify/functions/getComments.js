@@ -14,7 +14,7 @@ export const handler = async (event) => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-        'Notion-Version': '2022-06-28',
+        'Notion-Version': '2025-09-03',
         'Content-Type': 'application/json'
       }
     });
